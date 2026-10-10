@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunch Break | EMJ Advertising Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fa-solid fa-building"></i>
+            <span>EMJ Advertising Service</span>
+        </div>
+        <div class="nav-links">
+            <a href="attendence.html"><i class="fa-solid fa-clock"></i> Time In/Out</a>
+            <a href="admin.html"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+            <a href="section.html"><i class="fa-solid fa-list"></i> Sections</a>
+        </div>
+        <div class="nav-time" id="navTime"></div>
+    </nav>
+
+    <main class="main-container">
+        <div class="entries-header">
+            <h1><i class="fa-solid fa-utensils"></i> Lunch Break Logs</h1>
+            <div class="entries-actions">
+                <a href="section.html" class="btn btn-primary">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        <div class="entries-table-wrapper">
+            <table class="entries-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Duration</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="breakTableBody">
+                    <tr><td colspan="7" class="no-entries">Loading lunch break logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <i class="fa-solid fa-code"></i>
+        <span>Developed by <strong>IT Engineer John Royce Millamena</strong></span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('navTime').textContent = now.toLocaleTimeString('en-US', { hour12: true });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        async function loadBreaks() {
+            const today = getToday();
+            try {
+                const breaks = await API.getBreaks(today, 'Lunch Break');
+                renderBreaks(breaks);
+            } catch (error) {
+                console.error('Error loading breaks:', error);
+                document.getElementById('breakTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="no-entries">No lunch break logs</td></tr>';
+            }
+        }
+
+        function renderBreaks(breaks) {
+            const tbody = document.getElementById('breakTableBody');
+            if (breaks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-entries">No lunch break records</td></tr>';
+                return;
+            }
+            tbody.innerHTML = breaks.map((b, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${b.employeeName}</strong></td>
+                    <td>${b.department}</td>
+                    <td>${b.startTime || '-'}</td>
+                    <td>${b.endTime || 'Still on break'}</td>
+                    <td>${b.duration ? b.duration + 'h' : '-'}</td>
+                    <td>${b.date}</td>
+                </tr>
+            `).join('');
+        }
+
+        loadBreaks();
+    </script>
+</body>
+</html>

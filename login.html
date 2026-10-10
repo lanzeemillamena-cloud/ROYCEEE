@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Entries | EMJ Advertising Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fa-solid fa-building"></i>
+            <span>EMJ Advertising Service</span>
+        </div>
+        <div class="nav-links">
+            <a href="attendence.html"><i class="fa-solid fa-clock"></i> Time In/Out</a>
+            <a href="admin.html"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+            <a href="section.html"><i class="fa-solid fa-list"></i> Sections</a>
+        </div>
+        <div class="nav-time" id="navTime"></div>
+    </nav>
+
+    <main class="main-container">
+        <div class="entries-header">
+            <h1><i class="fa-solid fa-right-to-bracket"></i> Login Entries</h1>
+            <div class="entries-actions">
+                <a href="attendence.html" class="btn btn-primary">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        <div class="filter-group" style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+            <label style="font-weight: 600;">Filter by Date:</label>
+            <input type="date" id="filterDate" onchange="loadEntries()" style="padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px;">
+        </div>
+
+        <div class="entries-table-wrapper">
+            <table class="entries-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Hours</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="entriesTableBody">
+                    <tr><td colspan="7" class="no-entries">Loading entries...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <i class="fa-solid fa-code"></i>
+        <span>Developed by <strong>IT Engineer John Royce Millamena</strong></span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('navTime').textContent = now.toLocaleTimeString('en-US', { hour12: true });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        document.getElementById('filterDate').value = getToday();
+
+        async function loadEntries() {
+            const date = document.getElementById('filterDate').value || getToday();
+            try {
+                const entries = await API.getEntries(date);
+                renderEntries(entries);
+            } catch (error) {
+                document.getElementById('entriesTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="no-entries">Failed to load entries</td></tr>';
+            }
+        }
+
+        function renderEntries(entries) {
+            const tbody = document.getElementById('entriesTableBody');
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-entries">No entries for this date</td></tr>';
+                return;
+            }
+            tbody.innerHTML = entries.map((entry, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${entry.employeeName}</strong></td>
+                    <td>${entry.department}</td>
+                    <td>${entry.timeIn}</td>
+                    <td>${entry.timeOut || '-'}</td>
+                    <td>${entry.totalHours ? entry.totalHours + 'h' : '-'}</td>
+                    <td><span class="badge ${entry.status === 'completed' ? 'badge-success' : 'badge-present'}">${entry.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        loadEntries();
+    </script>
+</body>
+</html>

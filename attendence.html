@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMJ Advertising Service | Time In/Out</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="new-ui">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-building"></i>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">EMJ Advertising Service</span>
+                <span class="brand-sub">Time Management System</span>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="attendence.html" class="active"><i class="fa-solid fa-clock"></i> Time In/Out</a>
+            <a href="admin.html"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+            <a href="section.html"><i class="fa-solid fa-list"></i> Sections</a>
+        </div>
+        <div class="nav-time" id="navTime"></div>
+    </nav>
+
+    <main class="main-container">
+        <div class="hero-section">
+            <div class="clock-card">
+                <div class="time-display" id="currentTime">00:00:00</div>
+                <div class="date-display" id="currentDate">Loading...</div>
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Not Timed In</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="entry-form-card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-user"></i> Employee Entry</h2>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nameInput">Full Name</label>
+                    <input type="text" id="nameInput" placeholder="Enter your full name...">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary btn-timein" onclick="handleTimeIn()">
+                    <i class="fa-solid fa-right-to-bracket"></i> Time In
+                </button>
+                <button class="btn btn-danger btn-timeout" onclick="handleTimeOut()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Time Out
+                </button>
+            </div>
+        </div>
+
+        <div class="break-section-card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-mug-sun"></i> Break Management</h2>
+            </div>
+            <div class="break-buttons">
+                <div class="break-card" id="morningBreakCard" onclick="handleBreak('Morning Break')">
+                    <div class="break-icon"><i class="fa-solid fa-mug-hot"></i></div>
+                    <div class="break-info">
+                        <h4>Morning Break</h4>
+                        <span class="break-time" id="morningBreakTime"></span>
+                    </div>
+                </div>
+                <div class="break-card" id="lunchBreakCard" onclick="handleBreak('Lunch Break')">
+                    <div class="break-icon"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="break-info">
+                        <h4>Lunch Break</h4>
+                        <span class="break-time" id="lunchBreakTime"></span>
+                    </div>
+                </div>
+                <div class="break-card" id="eveningBreakCard" onclick="handleBreak('Evening Break')">
+                    <div class="break-icon"><i class="fa-solid fa-glass-water"></i></div>
+                    <div class="break-info">
+                        <h4>Evening Break</h4>
+                        <span class="break-time" id="eveningBreakTime"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="entries-section-card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-users"></i> Today's Entries</h2>
+            </div>
+            <div class="entries-grid" id="entriesGrid">
+                <div class="no-entries-message">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>No entries yet for today</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <i class="fa-solid fa-code"></i>
+        <span>Developed by <strong>IT Engineer John Royce Millamena</strong></span>
+    </footer>
+
+    <div class="camera-modal" id="cameraModal" style="display: none;">
+        <div class="camera-box">
+            <h3><i class="fa-solid fa-camera"></i> Smile! Take a Selfie</h3>
+            <p class="camera-name" id="cameraName"></p>
+            <div class="camera-preview">
+                <video id="cameraVideo" autoplay playsinline muted></video>
+                <img id="cameraShot" style="display: none;" alt="Selfie preview">
+            </div>
+            <canvas id="cameraCanvas" style="display: none;"></canvas>
+            <div class="camera-actions">
+                <button class="btn btn-danger" onclick="closeCamera()">Cancel</button>
+                <button class="btn btn-primary" id="cameraCaptureBtn" onclick="captureSelfie()">
+                    <i class="fa-solid fa-camera"></i> Capture
+                </button>
+                <button class="btn btn-primary" id="cameraRetakeBtn" onclick="retakeSelfie()" style="display: none;">
+                    <i class="fa-solid fa-rotate"></i> Retake
+                </button>
+                <button class="btn btn-success" id="cameraConfirmBtn" onclick="confirmSelfieTimeIn()" style="display: none;">
+                    <i class="fa-solid fa-check"></i> Confirm Time In
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        let activeBreaks = {};
+
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: true });
+            const dateStr = formatDate(now);
+            document.getElementById('currentTime').textContent = timeStr;
+            document.getElementById('currentDate').textContent = dateStr;
+            document.getElementById('navTime').textContent = timeStr;
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        async function loadEntries() {
+            try {
+                const entries = await API.getEntries(getToday());
+                renderEntries(entries);
+            } catch (error) {
+                console.error('Error loading entries:', error);
+                showNotification('Load failed: ' + (error.message || error), 'error');
+            }
+        }
+
+        function renderEntries(entries) {
+            const grid = document.getElementById('entriesGrid');
+            if (entries.length === 0) {
+                grid.innerHTML = '<div class="no-entries-message"><i class="fa-solid fa-inbox"></i><p>No entries yet for today</p></div>';
+                return;
+            }
+            grid.innerHTML = entries.map(entry => {
+                const statusClass = entry.status === 'completed' ? 'completed' : 
+                                   entry.status === 'on-break' ? 'on-break' : 'present';
+                const statusText = entry.status === 'completed' ? 'Completed' : 
+                                  entry.status === 'on-break' ? 'On Break' : 'Present';
+                const initial = entry.employeeName ? entry.employeeName.charAt(0) : '?';
+                const timeDisplay = entry.timeOut ? `${entry.timeIn} - ${entry.timeOut}` : entry.timeIn;
+                return `
+                    <div class="entry-card ${statusClass}">
+                        <div class="entry-header">
+                            <div class="entry-avatar">${initial}</div>
+                            <div class="entry-info">
+                                <h3 class="entry-name">${entry.employeeName}</h3>
+                                <span class="entry-dept">${entry.department}</span>
+                            </div>
+                            <span class="entry-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="entry-details">
+                            <div class="detail-item">
+                                <i class="fa-solid fa-clock"></i>
+                                <span>${timeDisplay}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                                <span>${entry.totalHours ? entry.totalHours + ' hours' : 'In progress'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        let cameraStream = null;
+        let selfieBlob = null;
+        let pendingTimeInName = '';
+
+        async function handleTimeIn() {
+            const name = document.getElementById('nameInput').value.trim().toUpperCase();
+
+            if (!name) {
+                showNotification('Please enter your name', 'error');
+                return;
+            }
+
+            pendingTimeInName = name;
+            selfieBlob = null;
+            document.getElementById('cameraName').textContent = name;
+            document.getElementById('cameraModal').style.display = 'flex';
+            document.getElementById('cameraVideo').style.display = 'block';
+            document.getElementById('cameraShot').style.display = 'none';
+            document.getElementById('cameraCaptureBtn').style.display = '';
+            document.getElementById('cameraRetakeBtn').style.display = 'none';
+            document.getElementById('cameraConfirmBtn').style.display = 'none';
+
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera not supported on this device/browser');
+                }
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' }, audio: false
+                });
+                document.getElementById('cameraVideo').srcObject = cameraStream;
+            } catch (err) {
+                console.error('Camera failed:', err);
+                closeCamera();
+                if (confirm('Camera not available. Continue Time In WITHOUT photo?')) {
+                    await doTimeIn(name, null);
+                }
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraVideo').srcObject = null;
+        }
+
+        function closeCamera() {
+            stopCamera();
+            document.getElementById('cameraModal').style.display = 'none';
+        }
+
+        function captureSelfie() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const maxW = 640;
+            const scale = Math.min(1, maxW / (video.videoWidth || maxW));
+            canvas.width = Math.round((video.videoWidth || maxW) * scale);
+            canvas.height = Math.round((video.videoHeight || 480) * scale);
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    showNotification('Capture failed, try again', 'error');
+                    return;
+                }
+                selfieBlob = blob;
+                document.getElementById('cameraShot').src = URL.createObjectURL(blob);
+                document.getElementById('cameraVideo').style.display = 'none';
+                document.getElementById('cameraShot').style.display = 'block';
+                document.getElementById('cameraCaptureBtn').style.display = 'none';
+                document.getElementById('cameraRetakeBtn').style.display = '';
+                document.getElementById('cameraConfirmBtn').style.display = '';
+            }, 'image/jpeg', 0.75);
+        }
+
+        function retakeSelfie() {
+            selfieBlob = null;
+            document.getElementById('cameraShot').style.display = 'none';
+            document.getElementById('cameraVideo').style.display = 'block';
+            document.getElementById('cameraCaptureBtn').style.display = '';
+            document.getElementById('cameraRetakeBtn').style.display = 'none';
+            document.getElementById('cameraConfirmBtn').style.display = 'none';
+        }
+
+        async function confirmSelfieTimeIn() {
+            if (!selfieBlob) {
+                showNotification('Please capture a photo first', 'error');
+                return;
+            }
+            const btn = document.getElementById('cameraConfirmBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+            try {
+                const safe = pendingTimeInName.replace(/[^A-Z0-9]+/gi, '-').substring(0, 40);
+                const path = `${getToday()}/${safe}_${Date.now()}.jpg`;
+                const photoUrl = await API.uploadSelfie(selfieBlob, path);
+                closeCamera();
+                await doTimeIn(pendingTimeInName, photoUrl);
+            } catch (error) {
+                console.error('Photo upload failed:', error);
+                showNotification('Photo upload failed: ' + (error.message || error), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirm Time In';
+            }
+        }
+
+        async function doTimeIn(name, photoUrl) {
+            try {
+                const result = await API.timeIn({
+                    employeeName: name,
+                    department: 'General',
+                    information: '-',
+                    reason: '',
+                    photoUrl: photoUrl
+                });
+
+                if (result.error) {
+                    showNotification(result.error, 'error');
+                } else {
+                    showNotification('Time in recorded!');
+                    document.getElementById('nameInput').value = '';
+                    loadEntries();
+                }
+            } catch (error) {
+                console.error('Time in failed:', error);
+                showNotification('Time in failed: ' + (error.message || error), 'error');
+            }
+        }
+
+        async function handleTimeOut() {
+            const name = document.getElementById('nameInput').value.trim().toUpperCase();
+
+            if (!name) {
+                showNotification('Please enter your name', 'error');
+                return;
+            }
+
+            try {
+                const result = await API.timeOut({ employeeName: name });
+                if (result.error) {
+                    showNotification(result.error, 'error');
+                } else {
+                    showNotification(`Time out recorded! Total: ${result.totalHours}h`);
+                    loadEntries();
+                }
+            } catch (error) {
+                console.error('Time out failed:', error);
+                showNotification('Time out failed: ' + (error.message || error), 'error');
+            }
+        }
+
+        async function handleBreak(breakType) {
+            const name = document.getElementById('nameInput').value.trim().toUpperCase();
+
+            if (!name) {
+                showNotification('Please enter your name first', 'error');
+                return;
+            }
+
+            const activeBreakKey = `${name}_${breakType}`;
+            const isActive = activeBreaks[activeBreakKey];
+
+            try {
+                if (!isActive) {
+                    await API.startBreak({
+                        employeeName: name,
+                        department: 'General',
+                        breakType: breakType
+                    });
+                    activeBreaks[activeBreakKey] = { startTime: new Date() };
+                    showNotification(`${breakType} started!`);
+                } else {
+                    const result = await API.endBreak({
+                        employeeName: name,
+                        breakType: breakType
+                    });
+                    delete activeBreaks[activeBreakKey];
+                    showNotification(`${breakType} ended! Duration: ${result.duration}h`);
+                }
+                loadEntries();
+            } catch (error) {
+                console.error('Break failed:', error);
+                showNotification('Break failed: ' + (error.message || error), 'error');
+            }
+        }
+
+        window.onload = function() {
+            loadEntries();
+        };
+    </script>
+</body>
+</html>

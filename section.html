@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sections | EMJ Advertising Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fa-solid fa-building"></i>
+            <span>EMJ Advertising Service</span>
+        </div>
+        <div class="nav-links">
+            <a href="attendence.html"><i class="fa-solid fa-clock"></i> Time In/Out</a>
+            <a href="admin.html"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+            <a href="section.html" class="active"><i class="fa-solid fa-list"></i> Sections</a>
+        </div>
+        <div class="nav-time" id="navTime"></div>
+    </nav>
+
+    <main class="main-container">
+        <h1 style="text-align: center; margin-bottom: 32px;">
+            <i class="fa-solid fa-list-check"></i> View Sections
+        </h1>
+
+        <div class="action-cards">
+            <a href="login.html" class="action-card" style="text-decoration: none; color: inherit;">
+                <i class="fa-solid fa-right-to-bracket" style="color: #2563eb;"></i>
+                <h3>Login Entries</h3>
+                <p>View all login time entries</p>
+            </a>
+            <a href="breakm.html" class="action-card" style="text-decoration: none; color: inherit;">
+                <i class="fa-solid fa-mug-hot" style="color: #f59e0b;"></i>
+                <h3>Morning Break</h3>
+                <p>View morning break logs</p>
+            </a>
+            <a href="lunch.html" class="action-card" style="text-decoration: none; color: inherit;">
+                <i class="fa-solid fa-utensils" style="color: #16a34a;"></i>
+                <h3>Lunch Break</h3>
+                <p>View lunch break logs</p>
+            </a>
+            <a href="breake.html" class="action-card" style="text-decoration: none; color: inherit;">
+                <i class="fa-solid fa-glass-water" style="color: #dc2626;"></i>
+                <h3>Evening Break</h3>
+                <p>View evening break logs</p>
+            </a>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <i class="fa-solid fa-code"></i>
+        <span>Developed by <strong>IT Engineer John Royce Millamena</strong></span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('navTime').textContent = now.toLocaleTimeString('en-US', { hour12: true });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>

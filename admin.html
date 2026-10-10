@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | EMJ Advertising Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+</head>
+<body class="admin-body">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-building"></i>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">EMJ Advertising Service</span>
+                <span class="brand-sub">Time Management System</span>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="attendence.html"><i class="fa-solid fa-clock"></i> Time In/Out</a>
+            <a href="admin.html" class="active"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+            <a href="section.html"><i class="fa-solid fa-list"></i> Sections</a>
+        </div>
+        <div class="nav-time" id="navTime"></div>
+    </nav>
+
+    <div class="admin-login" id="adminLogin">
+        <div class="login-box">
+            <i class="fa-solid fa-lock"></i>
+            <h2>Admin Access</h2>
+            <p>Enter admin password to continue</p>
+            <input type="password" id="adminPassword" placeholder="Enter password...">
+            <button class="btn btn-primary" onclick="checkAdmin()">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </button>
+        </div>
+    </div>
+
+    <div class="admin-panel" id="adminPanel" style="display: none;">
+        <div class="admin-header">
+            <h1><i class="fa-solid fa-chart-line"></i> Admin Dashboard</h1>
+            <button class="btn btn-danger" onclick="logoutAdmin()">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fa-solid fa-users"></i>
+                <div class="stat-info">
+                    <span class="stat-value" id="statTotal">0</span>
+                    <span class="stat-label">Total Employees</span>
+                </div>
+            </div>
+            <div class="stat-card present">
+                <i class="fa-solid fa-user-check"></i>
+                <div class="stat-info">
+                    <span class="stat-value" id="statPresent">0</span>
+                    <span class="stat-label">Present Today</span>
+                </div>
+            </div>
+            <div class="stat-card absent">
+                <i class="fa-solid fa-user-xmark"></i>
+                <div class="stat-info">
+                    <span class="stat-value" id="statAbsent">0</span>
+                    <span class="stat-label">Absent Today</span>
+                </div>
+            </div>
+            <div class="stat-card on-break">
+                <i class="fa-solid fa-mug-sun"></i>
+                <div class="stat-info">
+                    <span class="stat-value" id="statOnBreak">0</span>
+                    <span class="stat-label">On Break</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-sections">
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-user-plus"></i> Add New Employee</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="newEmpName" placeholder="Juan Dela Cruz">
+                    </div>
+                    <div class="form-group">
+                        <label>Employee ID</label>
+                        <input type="text" id="newEmpId" placeholder="EMP-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="newEmpDept">
+                            <option value="">Select Department</option>
+                            <option value="DBA">DBA</option>
+                            <option value="Development">Development</option>
+                            <option value="Digital Marketing">Digital Marketing</option>
+                            <option value="Trainer">Trainer</option>
+                            <option value="Operation Manager">Operation Manager</option>
+                            <option value="Managing Director">Managing Director</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Support">Support</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Role/Position</label>
+                        <input type="text" id="newEmpRole" placeholder="e.g. Senior Developer">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addEmployee()">
+                    <i class="fa-solid fa-plus"></i> Add Employee
+                </button>
+            </div>
+
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-building"></i> Department Overview</h3>
+                <div class="dept-list" id="deptList">
+                    <p class="loading">Loading department data...</p>
+                </div>
+            </div>
+
+            <div class="admin-card full-width">
+                <div class="entries-header">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Today's Time Log</h3>
+                    <div class="filter-group">
+                        <select id="filterDept" onchange="filterEntries()">
+                            <option value="">All Departments</option>
+                            <option value="DBA">DBA</option>
+                            <option value="Development">Development</option>
+                            <option value="Digital Marketing">Digital Marketing</option>
+                            <option value="Trainer">Trainer</option>
+                            <option value="Operation Manager">Operation Manager</option>
+                            <option value="Managing Director">Managing Director</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Support">Support</option>
+                        </select>
+                        <input type="date" id="filterDate" onchange="filterEntries()">
+                    </div>
+                </div>
+                <div class="entries-table-wrapper">
+                    <table class="entries-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Time In</th>
+                                <th>Time Out</th>
+                                <th>Hours</th>
+                                <th>Info</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Photo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminEntriesBody">
+                            <tr><td colspan="9" class="no-entries">No entries found</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="admin-actions">
+                    <button class="btn btn-danger" onclick="adminClearEntries()">
+                        <i class="fa-solid fa-trash"></i> Clear Filtered Entries
+                    </button>
+                    <span class="filter-group" style="align-items: center;">
+                        <label style="font-size: 12px; font-weight: 700; color: var(--text-muted);">FROM</label>
+                        <input type="date" id="exportFrom">
+                        <label style="font-size: 12px; font-weight: 700; color: var(--text-muted);">TO</label>
+                        <input type="date" id="exportTo">
+                    </span>
+                    <button class="btn btn-success" onclick="exportAdminData()">
+                        <i class="fa-solid fa-download"></i> Export to Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="loadAdminData()">
+                        <i class="fa-solid fa-rotate"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-card full-width">
+                <h3><i class="fa-solid fa-users-gear"></i> Employee List</h3>
+                <div class="entries-table-wrapper">
+                    <table class="entries-table">
+                        <thead>
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeListBody">
+                            <tr><td colspan="5" class="no-entries">No employees registered</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <i class="fa-solid fa-code"></i>
+        <span>Developed by <strong>IT Engineer John Royce Millamena</strong></span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        let isAdminLoggedIn = false;
+        let allEntries = [];
+        let allEmployees = [];
+        let lastSummary = null;
+
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: true });
+            document.getElementById('navTime').textContent = timeStr;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        function checkAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === CONFIG.ADMIN_PASSWORD) {
+                isAdminLoggedIn = true;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadAdminData();
+            } else {
+                showNotification('Incorrect password', 'error');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            document.getElementById('adminLogin').style.display = 'flex';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        async function loadAdminData() {
+            if (!isAdminLoggedIn) return;
+            
+            try {
+                const [summary, employees] = await Promise.all([
+                    API.getAdminSummary(),
+                    API.getEmployees()
+                ]);
+                lastSummary = summary;
+
+                document.getElementById('statTotal').textContent = summary.totalEmployees || 0;
+                document.getElementById('statPresent').textContent = summary.presentToday || 0;
+                document.getElementById('statAbsent').textContent = summary.absentToday || 0;
+                document.getElementById('statOnBreak').textContent = summary.onBreak || 0;
+
+                const deptList = document.getElementById('deptList');
+                if (summary.departments && summary.departments.length > 0) {
+                    deptList.innerHTML = summary.departments.map(dept => `
+                        <div class="dept-item">
+                            <span class="dept-name">${dept.name}</span>
+                            <div class="dept-badges">
+                                <span class="badge badge-success">${dept.present} P</span>
+                                <span class="badge badge-danger">${dept.absent} A</span>
+                                <span class="badge badge-break">${dept.onBreak} B</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    deptList.innerHTML = '<p class="no-entries">No department data available</p>';
+                }
+
+                allEmployees = employees;
+                renderEmployeeList(employees);
+
+                const today = getToday();
+                document.getElementById('filterDate').value = today;
+                if (!document.getElementById('exportFrom').value) document.getElementById('exportFrom').value = today;
+                if (!document.getElementById('exportTo').value) document.getElementById('exportTo').value = today;
+                await loadEntries(today, '');
+
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+                showNotification('Failed to load admin data', 'error');
+            }
+        }
+
+        function renderEmployeeList(employees) {
+            const tbody = document.getElementById('employeeListBody');
+            if (employees.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-entries">No employees registered yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = employees.map(emp => `
+                <tr>
+                    <td><strong>${emp.employeeId}</strong></td>
+                    <td>${emp.name}</td>
+                    <td>${emp.department}</td>
+                    <td>${emp.role || '-'}</td>
+                    <td><span class="badge ${emp.isActive ? 'badge-success' : 'badge-danger'}">${emp.isActive ? 'Active' : 'Inactive'}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadEntries(date, department) {
+            try {
+                allEntries = await API.getEntries(date, department);
+                renderEntries(allEntries);
+            } catch (error) {
+                console.error('Error loading entries:', error);
+            }
+        }
+
+        function renderEntries(entries) {
+            const tbody = document.getElementById('adminEntriesBody');
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-entries">No entries found for selected date</td></tr>';
+                return;
+            }
+            tbody.innerHTML = entries.map(entry => {
+                const statusClass = entry.status === 'completed' ? 'badge-success' : 
+                                   entry.status === 'on-break' ? 'badge-break' : 'badge-present';
+                const statusText = entry.status === 'completed' ? 'Completed' : 
+                                  entry.status === 'on-break' ? 'On Break' : 'Present';
+                return `
+                    <tr>
+                        <td><strong>${entry.employeeName}</strong></td>
+                        <td>${entry.department}</td>
+                        <td>${entry.timeIn}</td>
+                        <td>${entry.timeOut || '-'}</td>
+                        <td>${entry.totalHours ? entry.totalHours + 'h' : '-'}</td>
+                        <td>${entry.information || '-'}</td>
+                        <td>${entry.reason || '-'}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>${entry.photoUrl ? `<a href="${entry.photoUrl}" target="_blank" rel="noopener"><img src="${entry.photoUrl}" class="photo-thumb" alt="selfie" loading="lazy"></a>` : '<span class="badge badge-danger">No photo</span>'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterEntries() {
+            const date = document.getElementById('filterDate').value || getToday();
+            const dept = document.getElementById('filterDept').value;
+            loadEntries(date, dept);
+        }
+
+        async function addEmployee() {
+            const name = document.getElementById('newEmpName').value.trim();
+            const empId = document.getElementById('newEmpId').value.trim();
+            const dept = document.getElementById('newEmpDept').value;
+            const role = document.getElementById('newEmpRole').value.trim();
+
+            if (!name || !empId || !dept) {
+                showNotification('Please fill all required fields', 'error');
+                return;
+            }
+
+            try {
+                const result = await API.addEmployee({
+                    name, employeeId: empId, department: dept, role
+                });
+                if (result.error) {
+                    showNotification(result.error, 'error');
+                } else {
+                    showNotification('Employee added successfully!');
+                    document.getElementById('newEmpName').value = '';
+                    document.getElementById('newEmpId').value = '';
+                    document.getElementById('newEmpRole').value = '';
+                    loadAdminData();
+                }
+            } catch (error) {
+                showNotification('Failed to add employee', 'error');
+            }
+        }
+
+        async function adminClearEntries() {
+            const date = document.getElementById('filterDate').value || getToday();
+            const dept = document.getElementById('filterDept').value;
+            
+            if (!confirm(`Clear all entries for ${date}${dept ? ' in ' + dept : ''}?`)) return;
+            try {
+                await API.clearEntries({ date, department: dept || undefined });
+                showNotification('Entries cleared successfully');
+                loadAdminData();
+            } catch (error) {
+                showNotification('Failed to clear entries', 'error');
+            }
+        }
+
+        async function exportAdminData() {
+            if (typeof XLSX === 'undefined') {
+                showNotification('Excel library not loaded yet', 'error');
+                return;
+            }
+            const from = document.getElementById('exportFrom').value || getToday();
+            const to = document.getElementById('exportTo').value || from;
+            if (from > to) {
+                showNotification('FROM date must be before TO date', 'error');
+                return;
+            }
+            const dept = document.getElementById('filterDept').value || undefined;
+
+            let entries;
+            try {
+                showNotification('Preparing Excel file...');
+                entries = await API.getEntriesRange(from, to, dept);
+            } catch (error) {
+                console.error('Export failed:', error);
+                showNotification('Export failed: ' + (error.message || error), 'error');
+                return;
+            }
+            if (entries.length === 0) {
+                showNotification('No data to export for selected dates', 'error');
+                return;
+            }
+
+            const presentCount = entries.filter(e => e.status === 'completed' || e.status === 'present').length;
+            const onBreakCount = entries.filter(e => e.status === 'on-break').length;
+
+            // ---- Sheet 1: Summary ----
+            const summaryRows = [
+                ['EMJ Advertising Service - Summary'],
+                ['From', from],
+                ['To', to],
+                [],
+                ['Total Records', entries.length],
+                ['Present / Completed', presentCount],
+                ['On Break', onBreakCount]
+            ];
+            const wb = XLSX.utils.book_new();
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+            wsSummary['!cols'] = [{ wch: 22 }, { wch: 16 }];
+            XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+            // ---- Sheet 2: ATTENDANCE (payroll format: names down, days across with in/out) ----
+            const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+            const addDays = (dstr, n) => {
+                const d = new Date(dstr + 'T00:00:00');
+                d.setDate(d.getDate() + n);
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            };
+            const dates = [];
+            let cur = from, guard = 0;
+            while (cur <= to && guard < 370) { dates.push(cur); cur = addDays(cur, 1); guard++; }
+            const monthLabel = new Date(from + 'T00:00:00')
+                .toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+            const r1 = [''], r2 = [''], r3 = [monthLabel];
+            dates.forEach(ds => {
+                const d = new Date(ds + 'T00:00:00');
+                const dn = dayNames[d.getDay()];
+                r1.push(dn, dn);
+                r2.push('in', 'out');
+                r3.push(d.getDate(), d.getDate());
+            });
+
+            const nameList = [];
+            allEmployees.forEach(e => { if (e.name && !nameList.includes(e.name)) nameList.push(e.name); });
+            entries.forEach(e => { if (e.employeeName && !nameList.includes(e.employeeName)) nameList.push(e.employeeName); });
+            nameList.sort((a, b) => a.localeCompare(b));
+
+            const byKey = {};
+            entries.forEach(e => {
+                const k = e.date + '|' + e.employeeName;
+                if (!byKey[k]) byKey[k] = e;
+            });
+
+            const matrix = [r1, r2, r3];
+            nameList.forEach(nm => {
+                const row = [nm];
+                dates.forEach(ds => {
+                    const en = byKey[ds + '|' + nm];
+                    row.push(en ? (en.timeIn || '') : '', en ? (en.timeOut || '') : '');
+                });
+                matrix.push(row);
+            });
+            const wsAtt = XLSX.utils.aoa_to_sheet(matrix);
+            wsAtt['!cols'] = [{ wch: 22 }].concat(dates.flatMap(() => [{ wch: 11 }, { wch: 11 }]));
+            XLSX.utils.book_append_sheet(wb, wsAtt, 'ATTENDANCE');
+
+            // ---- Sheet 3: Photos (selfie evidence links) ----
+            const photoRows = entries
+                .filter(e => e.photoUrl)
+                .sort((a, b) => (a.date || '').localeCompare(b.date || '') ||
+                    (a.employeeName || '').localeCompare(b.employeeName || ''))
+                .map((e, i) => ({
+                    '#': i + 1,
+                    'Employee Name': e.employeeName,
+                    'Date': e.date,
+                    'Clock In': e.timeIn || '-',
+                    'Photo URL': e.photoUrl
+                }));
+            if (photoRows.length > 0) {
+                const wsPhotos = XLSX.utils.json_to_sheet(photoRows);
+                wsPhotos['!cols'] = [{ wch: 5 }, { wch: 24 }, { wch: 12 }, { wch: 11 }, { wch: 50 }];
+                XLSX.utils.book_append_sheet(wb, wsPhotos, 'Photos');
+            }
+
+            XLSX.writeFile(wb, from === to ? `EMJ_Summary_${from}.xlsx` : `EMJ_Summary_${from}_to_${to}.xlsx`);
+            showNotification('Summary Excel downloaded!');
+        }
+
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAdmin();
+        });
+
+        setInterval(() => {
+            if (isAdminLoggedIn) loadAdminData();
+        }, 60000);
+    </script>
+</body>
+</html>
